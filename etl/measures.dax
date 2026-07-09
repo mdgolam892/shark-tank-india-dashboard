@@ -1,0 +1,216 @@
+// ================================================================
+// Shark Tank India — DAX Measures (22 measures)
+// Tables: Pitches, SectorSummary, SharkInvestments, SeasonSummary
+// ================================================================
+
+
+// ----------------------------------------------------------------
+// 1. CORE FUNDING METRICS
+// ----------------------------------------------------------------
+
+Total Pitches =
+COUNTROWS(Pitches)
+
+Funded Deals =
+CALCULATE(COUNTROWS(Pitches), Pitches[deal_closed] = 1)
+
+Not Funded =
+CALCULATE(COUNTROWS(Pitches), Pitches[deal_closed] = 0)
+
+Funding Rate % =
+DIVIDE([Funded Deals], [Total Pitches], 0) * 100
+
+Total Investment (Lakh) =
+CALCULATE(SUM(Pitches[deal_amount_lakh]), Pitches[deal_closed] = 1)
+
+Avg Deal Size (Lakh) =
+DIVIDE([Total Investment (Lakh)], [Funded Deals], 0)
+
+
+// ----------------------------------------------------------------
+// 2. EQUITY & VALUATION MEASURES
+// ----------------------------------------------------------------
+
+Avg Ask Equity % =
+AVERAGE(Pitches[ask_equity_pct])
+
+Avg Deal Equity % =
+CALCULATE(AVERAGE(Pitches[deal_equity_pct]), Pitches[deal_closed] = 1)
+
+Avg Equity Premium (pp) =
+-- How many percentage points more equity did funded founders give
+-- vs what they originally asked? Positive = gave more than asked.
+CALCULATE(
+    AVERAGEX(
+        FILTER(Pitches, Pitches[deal_closed] = 1),
+        Pitches[equity_premium_pp]
+    )
+)
+
+Avg Ask Valuation (Lakh) =
+AVERAGE(Pitches[ask_valuation_lakh])
+
+Avg Deal Valuation (Lakh) =
+CALCULATE(AVERAGE(Pitches[deal_valuation_lakh]), Pitches[deal_closed] = 1)
+
+Valuation Haircut % =
+-- How much below their ask did founders settle?
+-- Positive = deal valuation was lower than asked (haircut applied)
+VAR AvgAsk  = [Avg Ask Valuation (Lakh)]
+VAR AvgDeal = [Avg Deal Valuation (Lakh)]
+RETURN
+DIVIDE(AvgAsk - AvgDeal, AvgAsk, 0) * 100
+
+
+// ----------------------------------------------------------------
+// 3. SECTOR BIAS MEASURES
+// ----------------------------------------------------------------
+
+Sector Funding Rate % =
+-- Context-sensitive: responds to current sector filter
+DIVIDE(
+    CALCULATE(COUNTROWS(Pitches), Pitches[deal_closed] = 1),
+    COUNTROWS(Pitches),
+    0
+) * 100
+
+Overall Funding Rate % =
+-- Ignores sector filter — used as benchmark for bias calculation
+CALCULATE(
+    DIVIDE(
+        COUNTROWS(FILTER(ALL(Pitches), Pitches[deal_closed] = 1)),
+        COUNTROWS(ALL(Pitches)),
+        0
+    )
+) * 100
+
+Investor Bias (pp) =
+-- Positive = sector is OVER-funded vs benchmark
+-- Negative = sector is UNDER-funded vs benchmark
+[Sector Funding Rate %] - [Overall Funding Rate %]
+
+Investor Bias Label =
+VAR Bias = [Investor Bias (pp)]
+RETURN
+SWITCH(
+    TRUE(),
+    Bias >  15, "Strong Overweight",
+    Bias >   5, "Overweight",
+    Bias >= -5, "Neutral",
+    Bias >= -15,"Underweight",
+              "Strong Underweight"
+)
+
+Bias Color Score =
+-- Used for conditional formatting: 1=green, 0=gray, -1=red
+VAR Bias = [Investor Bias (pp)]
+RETURN
+IF(Bias > 5, 1, IF(Bias < -5, -1, 0))
+
+
+// ----------------------------------------------------------------
+// 4. PROFITABILITY MEASURES
+// ----------------------------------------------------------------
+
+Profitable Pitches =
+CALCULATE(
+    COUNTROWS(Pitches),
+    Pitches[is_profitable] = 1
+)
+
+Profitability Rate % =
+DIVIDE([Profitable Pitches], [Total Pitches], 0) * 100
+
+Funded Profitability Rate % =
+CALCULATE(
+    DIVIDE(
+        CALCULATE(COUNTROWS(Pitches), Pitches[is_profitable] = 1),
+        COUNTROWS(Pitches),
+        0
+    ),
+    Pitches[deal_closed] = 1
+) * 100
+
+
+// ----------------------------------------------------------------
+// 5. SEASON TREND MEASURES
+// ----------------------------------------------------------------
+
+Season Funding Rate % =
+-- Same pattern as Sector Funding Rate but for season context
+DIVIDE(
+    CALCULATE(COUNTROWS(Pitches), Pitches[deal_closed] = 1),
+    COUNTROWS(Pitches),
+    0
+) * 100
+
+Avg Investment YoY Change % =
+VAR CurrentSeason =
+    CALCULATE([Avg Deal Size (Lakh)])
+VAR PrevSeason =
+    CALCULATE(
+        [Avg Deal Size (Lakh)],
+        FILTER(
+            ALL(Pitches[season]),
+            Pitches[season] = MAX(Pitches[season]) - 1
+        )
+    )
+RETURN
+DIVIDE(CurrentSeason - PrevSeason, PrevSeason, BLANK()) * 100
+
+
+// ----------------------------------------------------------------
+// 6. STRATEGIC INSIGHTS PAGE — DYNAMIC CARD MEASURES
+// ----------------------------------------------------------------
+
+Top Sector by Funding Rate =
+VAR RankedSectors =
+    TOPN(
+        1,
+        SUMMARIZE(ALL(Pitches[sector]), Pitches[sector],
+            "Rate", [Sector Funding Rate %]),
+        [Rate], DESC
+    )
+RETURN CONCATENATEX(RankedSectors, Pitches[sector])
+
+Top Sector by Funding Rate Value =
+VAR RankedSectors =
+    TOPN(
+        1,
+        SUMMARIZE(ALL(Pitches[sector]), Pitches[sector],
+            "Rate", [Sector Funding Rate %]),
+        [Rate], DESC
+    )
+RETURN MAXX(RankedSectors, [Rate])
+
+Most Active Shark =
+VAR SharkCounts =
+    SUMMARIZE(
+        ALL(SharkInvestments[shark_name]),
+        SharkInvestments[shark_name],
+        "Deals", CALCULATE(COUNTROWS(SharkInvestments))
+    )
+RETURN CONCATENATEX(TOPN(1, SharkCounts, [Deals], DESC), SharkInvestments[shark_name])
+
+Most Active Shark Deal Count =
+VAR SharkCounts =
+    SUMMARIZE(
+        ALL(SharkInvestments[shark_name]),
+        SharkInvestments[shark_name],
+        "Deals", CALCULATE(COUNTROWS(SharkInvestments))
+    )
+RETURN MAXX(TOPN(1, SharkCounts, [Deals], DESC), [Deals])
+
+Highest Avg Equity Premium Sector =
+VAR SectorPremiums =
+    SUMMARIZE(
+        FILTER(ALL(Pitches), Pitches[deal_closed] = 1),
+        Pitches[sector],
+        "AvgPremium", AVERAGEX(
+            FILTER(ALL(Pitches),
+                Pitches[deal_closed] = 1
+                && Pitches[sector] = EARLIER(Pitches[sector])),
+            Pitches[equity_premium_pp]
+        )
+    )
+RETURN CONCATENATEX(TOPN(1, SectorPremiums, [AvgPremium], DESC), Pitches[sector])
