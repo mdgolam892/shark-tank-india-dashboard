@@ -1,82 +1,225 @@
-# Shark Tank India — Startup Profitability Analysis
+# Shark Tank India — Startup Profitability & Investment Analysis
+
 ### Power BI · Power Query (M) · DAX
 
-An end-to-end startup investment analysis project built on 780+ pitch records across 5 seasons of Shark Tank India. The ETL pipeline is built entirely inside **Power BI Power Query** (M language) — no external Python or SQL tooling — with 22 custom DAX measures powering a 5-page interactive dashboard.
+An end-to-end startup investment analytics project built on 780+ Shark Tank India pitch records across five seasons. The project explores funding patterns, investor behaviour, equity negotiations, valuation changes, sector-level trends, and the relationship between profitability and funding.
+
+The complete data preparation and transformation workflow is built inside Power BI using Power Query (M), with 22 custom DAX measures powering a five-page interactive dashboard.
+![Overview & KPIs](dashboard/Screenshots/Page1-Overview%20%26%20KPIs.png)
+---
+
+## 🎯 Project Objective
+
+The goal of this project was to understand the patterns behind startup funding decisions on Shark Tank India and turn the raw pitch-level data into an interactive analytical solution.
+
+The analysis focuses on questions such as:
+
+- What patterns separate funded from non-funded startups?
+- How does funding behaviour differ across sectors?
+- Which sectors appear over- or under-represented relative to the overall funding rate?
+- How has funding behaviour changed across seasons?
+- Which sharks are most active and what sectors do they appear to favour?
+- How much additional equity do funded founders give up compared with what they originally asked for?
+- Does profitability appear to influence funding outcomes?
 
 ---
 
-## Business Questions Answered
+## 🛠️ What I Built
 
-- What patterns separate funded from non-funded startups — by sector, equity ask, and valuation?
-- Which sectors are systematically over- or under-funded relative to their financial merit?
-- How has the show's funding behavior evolved across seasons?
-- Which sharks are most active, and do they show sector preferences?
-- What equity premium do founders actually pay — and is it evenly distributed across sectors?
+### 1. Power Query ETL Pipeline
 
----
+Built the complete data preparation workflow inside Power BI using Power Query and M language.
 
-## Project Background
+The pipeline handles:
 
-Unlike datasets with clean, pre-processed inputs, this real-world dataset required significant shaping: inconsistent sector naming across seasons, per-shark investment data spread across 14 columns, mixed null patterns for unfunded pitches, and derived metrics (equity premium, valuation delta, revenue multiple) that didn't exist in the raw file. All of this was handled inside Power Query — making the ETL layer reproducible, version-controlled, and entirely self-contained within the Power BI file.
+- Removing unnecessary columns
+- Explicit data type conversion
+- Cleaning inconsistent source values
+- Standardising sector names
+- Creating derived business metrics
+- Handling missing values and unfunded pitches
+- Reshaping shark-level investment data
+- Creating analytical summary tables
 
----
+No external Python or SQL ETL tool is required for this project.
 
-## ETL Architecture (Power Query — M Language)
+### 2. Derived Business Metrics
 
-**Why Power Query instead of Python or SQL?**
-The other two projects in this portfolio use Python ETL (Retail) and MySQL SQL ETL (PMAY/Ujjwala). Power Query was chosen here deliberately to demonstrate tool diversity — the same analytical goals achieved through a third, different ETL approach.
+Created analytical fields that were not directly available in the raw dataset, including:
 
-### 4 Queries Built in Power Query
+- `equity_premium_pp`
+- `valuation_delta_pct`
+- `arr_lakh`
+- `revenue_multiple`
+- `is_profitable`
+- `years_in_business`
+- `outcome`
 
-| Query | Source | Purpose |
-|---|---|---|
-| `Pitches` | Raw CSV | Main fact table — one row per pitch. 13 transformation steps including column selection, renaming, type casting, derived columns (equity premium, valuation delta, revenue multiple, years in business, profitability flag), sector standardisation |
-| `SectorSummary` | Pitches | Aggregated sector-level table — funding rate, avg equity, avg valuation, bias metrics |
-| `SharkInvestments` | Pitches | Unpivoted shark presence columns → one row per shark per deal — enables per-shark analysis |
-| `SeasonSummary` | Pitches | Season-level trend table — funding rate, avg deal size, investment totals per season |
+These metrics provide a consistent basis for comparing funding decisions, founder negotiations, business performance, and sector behaviour.
 
-### Key Power Query Transformations
+### 3. Sector Standardisation
 
-- **Column selection**: drops 30+ unused columns upfront for performance
-- **Type casting**: explicit types on all 35 retained columns — no auto-detect guessing
-- **Derived columns**: `equity_premium_pp`, `valuation_delta_pct`, `arr_lakh`, `revenue_multiple`, `is_profitable`, `years_in_business`, `outcome`
-- **Sector standardisation**: M-language conditional logic normalises ~25 raw sector strings into consistent categories
-- **Unpivoting**: 7 per-shark presence columns → long format table for shark-level analysis
+The source data contains inconsistent sector naming across seasons.
 
----
+Power Query transformations were used to standardise approximately 25 raw sector variations into consistent analytical categories, making sector-level comparisons more reliable.
 
-## Dashboard Pages (5 pages)
+### 4. Shark Investment Transformation
 
-### Page 1 — Overview & KPIs
-High-level funding summary with season trend.
-- KPI cards: Total Pitches, Funded Deals, Overall Funding Rate %, Total Investment
-- Funding rate by season (line chart — shows evolution across S1–S5)
-- Sector distribution bar chart
+The raw dataset contains shark participation across multiple columns.
 
-### Page 2 — Investor Bias Analysis
-The most analytically distinctive page.
-- Sector funding rate vs overall benchmark (diverging bar chart, color-coded by bias tier)
-- Investor × Sector matrix (which sharks dominate which sectors)
-- Bias label conditional formatting (Strong Overweight → Strong Underweight)
+These fields were unpivoted into a long-format `SharkInvestments` table, creating one row per shark per deal and making investor-level analysis easier.
 
-### Page 3 — Equity & Valuation Deep Dive
-What founders actually give up vs what they asked.
-- Ask vs Deal valuation scatter (one dot per pitch, color by sector)
-- Equity premium distribution by sector (box chart or grouped bar)
-- Valuation haircut % cards
+### 5. Analytical Summary Tables
 
-### Page 4 — Profitability Analysis
-Tests whether profitability actually drives funding decisions.
-- Revenue vs profitability quadrant (scatter, funded vs unfunded color-coded)
-- Profitability rate: funded vs unfunded side-by-side cards
-- Significance context: funded startups by profit status
+Created supporting tables for:
 
-### Page 5 — Strategic Insights
-Synthesises findings from all 4 pages into specific, numbered insights with paired recommendations and 4 dynamic headline stat cards.
+- Sector-level funding analysis
+- Shark-level investment analysis
+- Season-level trends
+
+These tables are used to support the dashboard's analytical views and comparisons.
 
 ---
 
-## DAX Measures (22 total)
+## 📊 Dashboard
+
+The Power BI dashboard is organised into five pages, moving from an overall funding view into investor behaviour, founder equity negotiations, profitability analysis, and strategic insights.
+
+### 1️⃣ Overview & KPIs
+
+The first page provides a high-level view of Shark Tank India's funding activity across the five seasons.
+
+![Overview & KPIs](dashboard/Screenshots/Page1-Overview%20%26%20KPIs.png)
+
+**Key elements:**
+- Total pitches
+- Funded deals
+- Overall funding rate
+- Total investment
+- Funding rate by season
+- Sector distribution
+
+**Why it matters:** Provides a quick understanding of the overall funding landscape before moving into deeper analysis.
+
+---
+
+### 2️⃣ Investor Bias Analysis
+
+This page focuses on differences in funding behaviour across sectors and investors.
+
+![Investor Bias Analysis](dashboard/Screenshots/Page2-Investor%20Bias%20Analysis.png)
+
+**Key elements:**
+- Sector funding rate compared with the overall benchmark
+- Investor × Sector analysis
+- Shark participation across sectors
+- Bias classification from over-weighted to under-weighted sectors
+
+**Why it matters:** Helps identify whether certain sectors receive disproportionately more or less funding and highlights differences in investor preferences.
+
+---
+
+### 3️⃣ Equity & Valuation Deep Dive
+
+This page examines what founders ask for compared with what they ultimately give up in funded deals.
+
+![Equity & Valuation Deep Dive](dashboard/Screenshots/Page3-Equity%20%26%20Valuation%20Deep%20Dive.png)
+
+**Key elements:**
+- Ask valuation vs deal valuation
+- Equity premium analysis
+- Valuation changes between the ask and final deal
+- Sector-level comparison of founder equity
+
+**Why it matters:** Provides a deeper view of founder-investor negotiations and the valuation adjustments that happen during funding decisions.
+
+---
+
+### 4️⃣ Profitability Analysis
+
+This page examines the relationship between startup profitability and funding outcomes.
+
+![Profitability Analysis](dashboard/Screenshots/Page4-Profitability%20Analysis.png)
+
+**Key elements:**
+- Revenue vs profitability analysis
+- Funded vs unfunded startups
+- Profitability rate comparison
+- Profitability status of funded startups
+
+**Why it matters:** Helps explore whether profitability appears to be an important factor in funding decisions or whether other characteristics may play a larger role.
+
+---
+
+### 5️⃣ Strategic Insights
+
+The final page brings the analysis together into key observations and recommendations.
+
+![Strategic Insights](dashboard/Screenshots/Page5-Strategic%20Insights.png)
+
+**Key elements:**
+- Key analytical findings
+- Strategic recommendations
+- Dynamic headline statistics
+- Cross-page insights from funding, sector, investor, equity, and profitability analysis
+
+**Why it matters:** Converts the analysis from a collection of charts into actionable business observations.
+
+---
+
+## 🔄 ETL Architecture
+
+The project uses Power BI Power Query as the complete data transformation layer:
+
+    Raw Shark Tank India CSV
+            ↓
+    Power Query (M)
+            ↓
+    Data Cleaning & Standardisation
+            ↓
+    Derived Business Metrics
+            ↓
+    Analytical Tables
+            ↓
+    DAX Measures
+            ↓
+    Power BI Dashboard
+
+The decision to use Power Query was deliberate: the project demonstrates a different ETL approach from the Python-based Retail Sales project and the MySQL-based Public Policy project.
+
+---
+
+## 🔍 Power Query Transformations
+
+The main Power Query workflow includes four queries:
+
+| Query | Purpose |
+|---|---|
+| `Pitches` | Main fact table containing one row per pitch and the core transformation logic |
+| `SectorSummary` | Aggregated sector-level funding and bias analysis |
+| `SharkInvestments` | Unpivots shark participation into a long-format investor table |
+| `SeasonSummary` | Season-level funding and investment trends |
+
+### Key transformations include:
+
+- Selecting only relevant columns
+- Explicit data type assignment
+- Renaming and standardising fields
+- Creating calculated columns
+- Normalising sector names
+- Handling missing values
+- Unpivoting shark participation columns
+- Creating summary tables for sector and season analysis
+
+The Power Query code is stored in:
+
+`etl/etl_queries.pq`
+
+---
+
+## 📐 DAX Measures
+
+The dashboard is powered by **22 custom DAX measures** covering funding, valuation, sector bias, profitability, season trends, and strategic insights.
 
 | Category | Measures |
 |---|---|
@@ -87,107 +230,154 @@ Synthesises findings from all 4 pages into specific, numbered insights with pair
 | Season Trends | Season Funding Rate %, Avg Investment YoY Change % |
 | Strategic Insights | Top Sector by Funding Rate, Most Active Shark, Highest Equity Premium Sector |
 
-Full DAX with inline comments: [`dax/measures.dax`](dax/measures.dax)
+The DAX measures are stored in:
+
+`etl/measures.dax`
 
 ---
 
-## Key Findings
+## 📈 Analytical Areas
 
-> *Replace these placeholders with your actual computed values once the dashboard is built*
+The project covers several analytical dimensions:
 
-- **Funding rate trend**: Season 1 (XX%) → Season 5 (XX%) — showing [increasing/decreasing] investor confidence
-- **Sector bias**: [Sector X] funded at XXpp above benchmark despite comparable revenue multiples to [Sector Y] — systematic investor preference, not merit-based
-- **Equity premium**: Funded founders gave up an average of X.Xpp more equity than they asked. [Sector Z] had the highest premium (X.Xpp), suggesting reduced founder leverage in niche sectors
-- **Profitability vs funding**: XX% of funded startups were profitable vs XX% overall — [small/large] gap, meaning [sector/pitch quality] mattered more than profit status
+### Funding Performance
+- Overall funding rate
+- Funded vs non-funded pitches
+- Total investment
+- Average deal size
+- Season-level funding trends
+
+### Sector Analysis
+- Funding rate by sector
+- Sector performance against the overall benchmark
+- Investor-sector relationships
+- Sector-level equity and valuation patterns
+
+### Investor Analysis
+- Shark participation
+- Investor activity
+- Sector preferences
+- Investor bias relative to the overall funding benchmark
+
+### Equity & Valuation
+- Founder equity ask
+- Final deal equity
+- Equity premium
+- Ask vs deal valuation
+- Valuation haircut
+
+### Profitability
+- Revenue and profitability
+- Funded vs unfunded profitability
+- Profitability rates
+- Relationship between profitability and funding
 
 ---
 
-## Tech Stack
+## 📂 Dataset
 
-| Layer | Tool |
+**Shark Tank India — Seasons 1–5** — [Kaggle](https://www.kaggle.com/datasets/thirumani/shark-tank-india)
+
+- 780+ pitch records across five seasons
+- 75 columns covering pitch metadata, financials, shark participation, and deal terms
+- Financial values are represented in Indian Lakhs (₹)
+
+The original dataset contains inconsistent sector names, missing values for unfunded pitches, and shark-level investment fields spread across multiple columns. These are handled during the Power Query transformation process.
+
+---
+
+## 🚀 How to Run
+
+The dataset is already included in the repository, so no separate dataset download is required.
+
+Clone the repository:
+
+    git clone https://github.com/mdgolam892/shark-tank-india-dashboard.git
+    cd shark-tank-india-dashboard
+
+Open the Power BI dashboard:
+
+    dashboard/shark_tank_india_dashboard.pbix
+
+If Power BI asks for the source file location, update the source path in Power Query to the CSV included in:
+
+    data/Shark Tank India.csv
+
+Then refresh the dataset:
+
+    Home → Refresh
+
+The Power Query transformations and DAX measures will be applied automatically, and the five dashboard pages will be available for exploration.
+
+---
+
+## 📁 Project Structure
+
+    shark-tank-india-dashboard/
+    │
+    ├── dashboard/
+    │   ├── Screenshots/
+    │   │   ├── Page1-Overview & KPIs.png
+    │   │   ├── Page2-Investor Bias Analysis.png
+    │   │   ├── Page3-Equity & Valuation Deep Dive.png
+    │   │   ├── Page4-Profitability Analysis.png
+    │   │   └── Page5-Strategic Insights.png
+    │   │
+    │   └── shark_tank_india_dashboard.pbix
+    │
+    ├── data/
+    │   └── Shark Tank India.csv
+    │
+    ├── etl/
+    │   ├── etl_queries.pq
+    │   └── measures.dax
+    │
+    └── README.md
+
+---
+
+## 🧰 Tech Stack
+
+| Layer | Technology |
 |---|---|
-| Data cleaning & transformation | Power BI Power Query (M language) |
-| Business logic & metrics | DAX (22 custom measures) |
-| Dashboard & visualisation | Power BI Desktop |
-| Dataset | Shark Tank India — Kaggle (thirumani/shark-tank-india) |
+| Data Source | CSV |
+| Data Cleaning & Transformation | Power BI Power Query |
+| Transformation Language | M |
+| Business Logic & Metrics | DAX |
+| Dashboard & Visualisation | Power BI Desktop |
+| Dataset | Shark Tank India — Kaggle |
 
 ---
 
-## Project Structure
+## 💡 Key Takeaways
 
-```
-shark-tank-india/
-│
-├── data/
-│   └── SharkTankIndia.csv         ← Download from Kaggle (link below)
-│
-├── powerbi/
-│   ├── SharkTankIndia.pbix        ← Power BI dashboard
-│   ├── dax/
-│   │   └── measures.dax           ← All DAX measures with comments
-│   └── powerquery/
-│       └── etl_queries.pq         ← All 4 Power Query M scripts
-│
-├── screenshots/                   ← Dashboard page screenshots (5 pages)
-│
-├── README.md
-├── requirements.txt
-└── .gitignore
-```
+This project demonstrates an end-to-end approach to analysing startup investment data:
+
+- Transforming raw multi-season data into an analytics-ready model
+- Cleaning and standardising inconsistent categorical data
+- Creating derived business metrics from raw financial fields
+- Reshaping multi-column investor data using unpivoting
+- Building reusable DAX measures for business analysis
+- Comparing funding behaviour across sectors and seasons
+- Analysing investor preferences and sector bias
+- Examining founder equity and valuation changes
+- Exploring the relationship between profitability and funding
+- Turning analytical findings into strategic recommendations
+
+The project also demonstrates tool diversity by using **Power Query and DAX as the primary data engineering and analytics layer**, rather than relying on external Python or SQL processing.
 
 ---
 
-## How to Run
-
-```bash
-# 1. Clone the repo
-git clone https://github.com/mdgolam892/shark-tank-india.git
-cd shark-tank-india
-
-# 2. Download the dataset
-# Go to: https://www.kaggle.com/datasets/thirumani/shark-tank-india
-# Download and save as: data/SharkTankIndia.csv
-
-# 3. Open Power BI
-# Open powerbi/SharkTankIndia.pbix
-# If prompted, update the file path in Power Query:
-#   Transform Data → Source step → update file path to your local data/ folder
-
-# 4. Refresh
-# Home → Refresh — all 4 queries will run automatically
-```
-
----
-
-## Dataset
-
-**Shark Tank India (Seasons 1–5)** — [Kaggle](https://www.kaggle.com/datasets/thirumani/shark-tank-india)
-- 780+ pitch records across 5 seasons
-- 75 columns: pitch metadata, financials, per-shark investment breakdown, deal terms
-- Values in Indian Lakhs (₹)
-
----
-
-## Why This Project Is Different From the Other Two
-
-| | Retail Sales | PMAY/Ujjwala | Shark Tank India |
-|---|---|---|---|
-| ETL tool | Python (pandas) | Python loader + MySQL SQL | Power BI Power Query (M) |
-| Data source | Clean Kaggle CSV | Fragmented govt open data | Multi-season Kaggle dataset |
-| Key technique | pandas pipeline | SQL UNION ALL unpivoting | M-language column unpivoting + sector normalisation |
-| Dashboard focus | Sales performance | Policy gap analysis | Investor bias & equity analysis |
-
----
-
-## License
+## 📄 License
 
 MIT License — see [LICENSE](LICENSE) for details.
 
 ---
 
-## Contact
+## 📫 Contact
 
 **MD GOLAM MOHIUDDIN**
-📧 mdgolammohiuddin892@gmail.com
-🌐 [LinkedIn](https://www.linkedin.com/in/md-golam-mohiuddin-980b18150/)
-🐙 [GitHub](https://github.com/mdgolam892)
+
+📧 [mdgolammohiuddin892@gmail.com](mailto:mdgolammohiuddin892@gmail.com)  
+🔗 [LinkedIn](https://www.linkedin.com/in/md-golam-mohiuddin-980b18150/)  
+💻 [GitHub](https://github.com/mdgolam892)
